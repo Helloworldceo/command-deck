@@ -19,6 +19,7 @@ async function ensureSchema(sql) {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
+  await sql`ALTER TABLE command_deck.projects ADD COLUMN IF NOT EXISTS image_url TEXT NOT NULL DEFAULT ''`;
   ensured = true;
 }
 
@@ -34,6 +35,7 @@ function rowToProject(r) {
     liveUrl: r.live_url,
     repoUrl: r.repo_url,
     updatedAt: r.updated_at,
+    imageUrl: r.image_url,
   };
 }
 
@@ -57,10 +59,10 @@ module.exports = async (req, res) => {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     await sql`
       INSERT INTO command_deck.projects
-        (id, name, category, status, description, next_step, blocker, live_url, repo_url, updated_at)
+        (id, name, category, status, description, next_step, blocker, live_url, repo_url, updated_at, image_url)
       VALUES
         (${id}, ${d.name || ''}, ${d.category || ''}, ${d.status || 'idea'}, ${d.description || ''},
-         ${d.nextStep || ''}, ${d.blocker || ''}, ${d.liveUrl || ''}, ${d.repoUrl || ''}, ${d.updatedAt || ''})
+         ${d.nextStep || ''}, ${d.blocker || ''}, ${d.liveUrl || ''}, ${d.repoUrl || ''}, ${d.updatedAt || ''}, ${d.imageUrl || ''})
     `;
     return res.status(200).json({ id, ...d });
   }
@@ -73,7 +75,8 @@ module.exports = async (req, res) => {
       UPDATE command_deck.projects SET
         name = ${d.name || ''}, category = ${d.category || ''}, status = ${d.status || 'idea'},
         description = ${d.description || ''}, next_step = ${d.nextStep || ''}, blocker = ${d.blocker || ''},
-        live_url = ${d.liveUrl || ''}, repo_url = ${d.repoUrl || ''}, updated_at = ${d.updatedAt || ''}
+        live_url = ${d.liveUrl || ''}, repo_url = ${d.repoUrl || ''}, updated_at = ${d.updatedAt || ''},
+        image_url = COALESCE(${d.imageUrl ?? null}, image_url)
       WHERE id = ${id}
     `;
     return res.status(200).json({ id, ...d });

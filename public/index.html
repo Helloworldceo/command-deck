@@ -32,6 +32,7 @@
     --idea-soft: #F3E7D8;
 
     --track-client: #B23A66;
+    --track-design: #9C3FA6;
     --track-aitools: #4C5FD5;
     --track-finance: #A6791F;
     --track-learning: #7A4FC4;
@@ -68,6 +69,7 @@
       --idea-soft: #2E2416;
 
       --track-client: #E890B3;
+      --track-design: #D98FE0;
       --track-aitools: #93A3F5;
       --track-finance: #E3B94D;
       --track-learning: #B79BF0;
@@ -145,6 +147,7 @@
   .track-count { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-faint); }
   .cat-product { fill: var(--accent); }
   .cat-client { fill: var(--track-client); }
+  .cat-design { fill: var(--track-design); }
   .cat-aitools { fill: var(--track-aitools); }
   .cat-finance { fill: var(--track-finance); }
   .cat-learning { fill: var(--track-learning); }
@@ -153,6 +156,7 @@
 
   .flow-product { stroke: var(--accent); }
   .flow-client { stroke: var(--track-client); }
+  .flow-design { stroke: var(--track-design); }
   .flow-aitools { stroke: var(--track-aitools); }
   .flow-finance { stroke: var(--track-finance); }
   .flow-learning { stroke: var(--track-learning); }
@@ -166,6 +170,7 @@
   .ring-blocked { stroke: var(--blocked); stroke-dasharray: 2.5 3; }
 
   .node { stroke: var(--bg-elevated); stroke-width: 2.5px; transition: filter 0.15s; }
+  .node-thumb { stroke: var(--bg-elevated); stroke-width: 2px; transition: filter 0.15s; }
   .node-live { fill: var(--live); }
   .node-shipped { fill: var(--shipped); }
   .node-blocked { fill: var(--blocked); }
@@ -176,6 +181,8 @@
   .node-group { cursor: pointer; outline: none; }
   .node-group:hover .node, .node-group:focus .node { filter: brightness(1.18); }
   .node-group:focus .node { stroke: var(--accent); }
+  .node-group:hover .node-thumb, .node-group:focus .node-thumb { filter: brightness(1.1); }
+  .node-group:focus .node-thumb { stroke: var(--accent); }
   .node-group.dim { opacity: 0.16; }
 
   .empty-state { text-align: center; padding: 48px 20px; color: var(--ink-faint); font-size: 14px; border: 1px dashed var(--border-strong); border-radius: 14px; }
@@ -205,6 +212,7 @@
   .status-blocked { background: var(--blocked-soft); color: var(--blocked); }
   .status-paused { background: var(--paused-soft); color: var(--paused); }
   .status-idea { background: var(--idea-soft); color: var(--idea); }
+  .detail-image { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 14px; display: block; background: var(--bg-sunken); }
   .detail-cat { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); margin-bottom: 2px; }
   .detail-name { font-family: var(--font-mono); font-size: 19px; font-weight: 700; margin: 6px 0 10px; }
   .desc { color: var(--ink-dim); font-size: 13.5px; margin: 0 0 12px; }
@@ -262,6 +270,7 @@
     <span class="legend-item"><span class="legend-dot dot-blocked"></span>Blocked — dashed ring</span>
     <span class="legend-item"><span class="legend-dot dot-paused"></span>Paused</span>
     <span class="legend-item"><span class="legend-dot dot-idea"></span>Idea</span>
+    <span class="legend-item">Design projects show a thumbnail instead of a dot</span>
   </div>
 
   <div id="board"></div>
@@ -304,6 +313,7 @@
           <datalist id="category-options">
             <option value="Product"></option>
             <option value="Client Work"></option>
+            <option value="Design"></option>
             <option value="AI / Security Tools"></option>
             <option value="Finance Tools"></option>
             <option value="Learning Series"></option>
@@ -353,10 +363,11 @@
 
 <script>
   const API_URL = '/api/projects';
-  const CATEGORY_ORDER = ['Product', 'Client Work', 'AI / Security Tools', 'Finance Tools', 'Learning Series', 'Personal'];
+  const CATEGORY_ORDER = ['Product', 'Client Work', 'Design', 'AI / Security Tools', 'Finance Tools', 'Learning Series', 'Personal'];
   const CATEGORY_SLUG = {
     'Product': 'product',
     'Client Work': 'client',
+    'Design': 'design',
     'AI / Security Tools': 'aitools',
     'Finance Tools': 'finance',
     'Learning Series': 'learning',
@@ -511,7 +522,14 @@
         } else if (p.status === 'blocked') {
           svg += '<circle cx="' + x + '" cy="' + y + '" r="12" class="ring-blocked" fill="none" stroke-width="1.6"/>';
         }
-        svg += '<circle cx="' + x + '" cy="' + y + '" r="8" class="node node-' + p.status + '"/>';
+        if (p.imageUrl) {
+          const clipId = 'clip-' + p.id;
+          svg += '<clipPath id="' + clipId + '"><circle cx="' + x + '" cy="' + y + '" r="10"/></clipPath>';
+          svg += '<image href="' + escapeHtml(p.imageUrl) + '" x="' + (x - 10) + '" y="' + (y - 10) + '" width="20" height="20" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + clipId + ')"/>';
+          svg += '<circle cx="' + x + '" cy="' + y + '" r="10" class="node-thumb" fill="none"/>';
+        } else {
+          svg += '<circle cx="' + x + '" cy="' + y + '" r="8" class="node node-' + p.status + '"/>';
+        }
         svg += '<text x="' + x + '" y="' + (y + 25) + '" text-anchor="middle" class="node-label">' + escapeHtml(truncate(p.name, 13)) + '</text>';
         svg += '</g>';
       });
@@ -558,7 +576,8 @@
     let links = '';
     if (p.liveUrl) links += '<a href="' + escapeHtml(p.liveUrl) + '" target="_blank" rel="noopener">' + EXT_ICON + ' Live</a>';
     if (p.repoUrl) links += '<a href="' + escapeHtml(p.repoUrl) + '" target="_blank" rel="noopener">' + EXT_ICON + ' Repo</a>';
-    return '<p class="detail-cat">' + escapeHtml(p.category || 'Other') + '</p>' +
+    return (p.imageUrl ? '<img class="detail-image" src="' + escapeHtml(p.imageUrl) + '" alt="' + escapeHtml(p.name) + ' preview" loading="lazy">' : '') +
+      '<p class="detail-cat">' + escapeHtml(p.category || 'Other') + '</p>' +
       '<span class="status-pill status-' + status + '">' + STATUS_LABEL[status] + '</span>' +
       '<h3 class="detail-name">' + escapeHtml(p.name) + '</h3>' +
       (p.description ? '<p class="desc">' + escapeHtml(p.description) + '</p>' : '') +
