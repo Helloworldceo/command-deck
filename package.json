@@ -2,8 +2,8 @@
   "name": "command-deck",
   "private": true,
   "version": "1.0.0",
-  "description": "Animated portfolio tracker across all projects — static site + a Netlify Function backed by Netlify Blobs.",
+  "description": "Animated portfolio tracker across all projects — static site + a Vercel serverless function backed by Postgres (Neon).",
   "dependencies": {
-    "@netlify/blobs": "^8.1.0"
+    "@neondatabase/serverless": "^0.10.4"
   }
 }
