@@ -1,0 +1,9 @@
+{
+  "name": "command-deck",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Animated portfolio tracker across all projects — static site + a Netlify Function backed by Netlify Blobs.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

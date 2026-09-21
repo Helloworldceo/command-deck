@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command Deck</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F6F3EC;
+    --bg-elevated: #FFFFFF;
+    --bg-sunken: #EFEADC;
+    --ink: #211D14;
+    --ink-dim: #6B6555;
+    --ink-faint: #948C77;
+    --border: #E1DACA;
+    --border-strong: #CFC5AE;
+    --accent: #0F7A6E;
+    --accent-ink: #08403A;
+    --accent-soft: #E1F2EE;
+    --shadow: 0 1px 2px rgba(33,29,20,0.06), 0 8px 24px -12px rgba(33,29,20,0.18);
+
+    --live: #1E8F5F;
+    --live-soft: #E4F5EB;
+    --shipped: #3457B2;
+    --shipped-soft: #E7ECFA;
+    --blocked: #B4460B;
+    --blocked-soft: #FCE9DC;
+    --paused: #8A8272;
+    --paused-soft: #EFEADC;
+    --idea: #8B5E34;
+    --idea-soft: #F3E7D8;
+
+    --track-client: #B23A66;
+    --track-aitools: #4C5FD5;
+    --track-finance: #A6791F;
+    --track-learning: #7A4FC4;
+    --track-personal: #6E6250;
+
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16140F;
+      --bg-elevated: #201C15;
+      --bg-sunken: #0F0D0A;
+      --ink: #F1EBDB;
+      --ink-dim: #A79E89;
+      --ink-faint: #756D5B;
+      --border: #34301F;
+      --border-strong: #453F29;
+      --accent: #34D8C4;
+      --accent-ink: #B4F2E6;
+      --accent-soft: #163430;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.55);
+
+      --live: #3FCB8B;
+      --live-soft: #123024;
+      --shipped: #8AA3EF;
+      --shipped-soft: #1B2140;
+      --blocked: #FB8B4C;
+      --blocked-soft: #3A2313;
+      --paused: #A79E89;
+      --paused-soft: #26221A;
+      --idea: #D6A972;
+      --idea-soft: #2E2416;
+
+      --track-client: #E890B3;
+      --track-aitools: #93A3F5;
+      --track-finance: #E3B94D;
+      --track-learning: #B79BF0;
+      --track-personal: #B3A688;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 28px 20px 64px;
+    background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  @media (min-width: 700px) { body { padding: 40px 32px 72px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  .wrap { max-width: 1140px; margin: 0 auto; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+
+  .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  .title { font-family: var(--font-mono); font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+  .subtitle { color: var(--ink-dim); font-size: 14px; margin-top: 6px; max-width: 52ch; }
+  .sync { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-elevated); white-space: nowrap; }
+  .sync .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); }
+  .sync.ok .dot { background: var(--live); box-shadow: 0 0 0 3px var(--live-soft); }
+  .sync.ok { color: var(--live); }
+  .sync.warn .dot { background: var(--blocked); }
+  .sync.warn { color: var(--blocked); }
+
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
+  @media (min-width: 560px) { .stats { grid-template-columns: repeat(4, 1fr); } }
+  .stat { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat .n { font-family: var(--font-mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .l { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-top: 2px; }
+  .stat.live .n { color: var(--live); }
+  .stat.shipped .n { color: var(--shipped); }
+  .stat.blocked .n { color: var(--blocked); }
+  .stat.paused .n { color: var(--paused); }
+
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-elevated); color: var(--ink-dim); cursor: pointer; }
+  .pill:hover { border-color: var(--border-strong); }
+  .pill.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .btn { font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; padding: 9px 16px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: var(--bg-elevated); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-ghost { background: transparent; border-color: var(--border-strong); color: var(--ink); }
+  .btn-ghost:hover { background: var(--bg-sunken); }
+  .btn-danger { background: transparent; border-color: var(--blocked); color: var(--blocked); }
+  .btn-danger:hover { background: var(--blocked-soft); }
+  .btn svg { width: 14px; height: 14px; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 16px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .legend-dot.dot-live { background: var(--live); }
+  .legend-dot.dot-shipped { background: var(--shipped); }
+  .legend-dot.dot-paused { background: var(--paused); }
+  .legend-dot.dot-idea { background: var(--idea); }
+  .legend-dot.dot-blocked { background: transparent; border: 1.5px dashed var(--blocked); width: 9px; height: 9px; }
+
+  .trackmap-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-elevated); box-shadow: var(--shadow); padding: 4px 0; margin-bottom: 8px; }
+  svg.trackmap { display: block; width: 1120px; max-width: none; height: auto; }
+  .track-label { font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em; }
+  .track-count { font-family: var(--font-mono); font-size: 9.5px; fill: var(--ink-faint); }
+  .cat-product { fill: var(--accent); }
+  .cat-client { fill: var(--track-client); }
+  .cat-aitools { fill: var(--track-aitools); }
+  .cat-finance { fill: var(--track-finance); }
+  .cat-learning { fill: var(--track-learning); }
+  .cat-personal { fill: var(--track-personal); }
+  .cat-other { fill: var(--ink-faint); }
+
+  .flow-product { stroke: var(--accent); }
+  .flow-client { stroke: var(--track-client); }
+  .flow-aitools { stroke: var(--track-aitools); }
+  .flow-finance { stroke: var(--track-finance); }
+  .flow-learning { stroke: var(--track-learning); }
+  .flow-personal { stroke: var(--track-personal); }
+  .flow-other { stroke: var(--ink-faint); }
+  .flow { animation: flow 5.5s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -280; } }
+
+  .ring-live { stroke: var(--live); transform-box: fill-box; transform-origin: center; animation: ringPulse 2.1s ease-out infinite; }
+  @keyframes ringPulse { 0% { transform: scale(0.8); opacity: 0.85; } 75% { transform: scale(1.65); opacity: 0; } 100% { transform: scale(1.65); opacity: 0; } }
+  .ring-blocked { stroke: var(--blocked); stroke-dasharray: 2.5 3; }
+
+  .node { stroke: var(--bg-elevated); stroke-width: 2.5px; transition: filter 0.15s; }
+  .node-live { fill: var(--live); }
+  .node-shipped { fill: var(--shipped); }
+  .node-blocked { fill: var(--blocked); }
+  .node-paused { fill: var(--paused); }
+  .node-idea { fill: var(--idea); }
+  .node-label { font-family: var(--font-mono); font-size: 9px; fill: var(--ink-dim); }
+
+  .node-group { cursor: pointer; outline: none; }
+  .node-group:hover .node, .node-group:focus .node { filter: brightness(1.18); }
+  .node-group:focus .node { stroke: var(--accent); }
+  .node-group.dim { opacity: 0.16; }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--ink-faint); font-size: 14px; border: 1px dashed var(--border-strong); border-radius: 14px; }
+  .skeleton-track { height: 14px; border-radius: 7px; background: var(--bg-sunken); margin: 24px 0; width: 92%; }
+  .skeleton-wrap { padding: 20px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(20, 18, 12, 0.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 50; }
+  .modal { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 480px; padding: 22px; box-shadow: var(--shadow); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 10px; }
+  .modal-head h2 { font-family: var(--font-mono); font-size: 17px; font-weight: 700; }
+  .field { margin-bottom: 13px; }
+  .field label { display: block; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 5px; }
+  .field input, .field select, .field textarea { width: 100%; font-family: var(--font-sans); font-size: 14px; color: var(--ink); background: var(--bg-sunken); border: 1px solid var(--border-strong); border-radius: 8px; padding: 9px 11px; }
+  .field textarea { resize: vertical; min-height: 56px; font-family: var(--font-sans); }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .modal-foot.split { justify-content: space-between; }
+  .form-error { color: var(--blocked); font-size: 12.5px; margin-bottom: 10px; }
+  .icon-btn { width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; border: 1px solid transparent; background: transparent; color: var(--ink-faint); cursor: pointer; }
+  .icon-btn:hover { background: var(--bg-sunken); color: var(--ink); }
+  .icon-btn svg { width: 14px; height: 14px; }
+
+  .status-pill { font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; white-space: nowrap; display: inline-block; }
+  .status-live { background: var(--live-soft); color: var(--live); }
+  .status-shipped { background: var(--shipped-soft); color: var(--shipped); }
+  .status-blocked { background: var(--blocked-soft); color: var(--blocked); }
+  .status-paused { background: var(--paused-soft); color: var(--paused); }
+  .status-idea { background: var(--idea-soft); color: var(--idea); }
+  .detail-cat { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); margin-bottom: 2px; }
+  .detail-name { font-family: var(--font-mono); font-size: 19px; font-weight: 700; margin: 6px 0 10px; }
+  .desc { color: var(--ink-dim); font-size: 13.5px; margin: 0 0 12px; }
+  .meta-line { display: flex; gap: 6px; font-size: 12.5px; line-height: 1.45; margin-bottom: 8px; }
+  .meta-line .tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-faint); padding-top: 1px; white-space: nowrap; }
+  .meta-line.next .tag { color: var(--accent); }
+  .meta-line.blocker { color: var(--blocked); }
+  .meta-line.blocker .tag { color: var(--blocked); }
+  .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); flex-wrap: wrap; }
+  .links { display: flex; gap: 10px; }
+  .links a { color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+  .links a:hover { text-decoration: underline; }
+  .links a svg { width: 11px; height: 11px; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <div>
+      <p class="eyebrow">Portfolio · Live tracks</p>
+      <h1 class="title">Command Deck</h1>
+      <p class="subtitle">Every project on this machine, laid out as tracks — one line per category, one station per project. Viewing is open to anyone with the link; editing needs the key.</p>
+    </div>
+    <span class="sync" id="syncBadge"><span class="dot"></span><span id="syncLabel">Connecting…</span></span>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat live"><div class="n" id="statLive">0</div><div class="l">Live</div></div>
+    <div class="stat shipped"><div class="n" id="statShipped">0</div><div class="l">Shipped</div></div>
+    <div class="stat blocked"><div class="n" id="statBlocked">0</div><div class="l">Blocked</div></div>
+    <div class="stat paused"><div class="n" id="statPaused">0</div><div class="l">Paused</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button class="pill active" data-filter="all">All</button>
+      <button class="pill" data-filter="live">Live</button>
+      <button class="pill" data-filter="blocked">Blocked</button>
+      <button class="pill" data-filter="shipped">Shipped</button>
+      <button class="pill" data-filter="paused">Paused</button>
+      <button class="pill" data-filter="idea">Idea</button>
+    </div>
+    <button class="btn btn-primary" id="addBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add project
+    </button>
+  </div>
+
+  <div class="legend" id="legend">
+    <span class="legend-item"><span class="legend-dot dot-live"></span>Live — pulsing</span>
+    <span class="legend-item"><span class="legend-dot dot-shipped"></span>Shipped</span>
+    <span class="legend-item"><span class="legend-dot dot-blocked"></span>Blocked — dashed ring</span>
+    <span class="legend-item"><span class="legend-dot dot-paused"></span>Paused</span>
+    <span class="legend-item"><span class="legend-dot dot-idea"></span>Idea</span>
+  </div>
+
+  <div id="board"></div>
+</div>
+
+<div class="overlay" id="detailOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <span></span>
+      <button class="icon-btn" id="closeDetail" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="detailBody"></div>
+    <div class="modal-foot split">
+      <button type="button" class="btn btn-danger" id="detailDelete">Delete</button>
+      <button type="button" class="btn btn-primary" id="detailEdit">Edit</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">Add project</h2>
+      <button class="icon-btn" id="closeModal" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="form-error" id="formError" hidden></div>
+    <form id="projectForm">
+      <div class="field">
+        <label for="f-name">Name</label>
+        <input id="f-name" required maxlength="80" placeholder="e.g. SilkBridge">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-category">Category</label>
+          <input id="f-category" list="category-options" required maxlength="40" placeholder="Product">
+          <datalist id="category-options">
+            <option value="Product"></option>
+            <option value="Client Work"></option>
+            <option value="AI / Security Tools"></option>
+            <option value="Finance Tools"></option>
+            <option value="Learning Series"></option>
+            <option value="Personal"></option>
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option value="live">Live</option>
+            <option value="shipped">Shipped</option>
+            <option value="blocked">Blocked</option>
+            <option value="paused">Paused</option>
+            <option value="idea">Idea</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-description">Description</label>
+        <textarea id="f-description" maxlength="400" placeholder="What this is, in one or two sentences."></textarea>
+      </div>
+      <div class="field">
+        <label for="f-nextstep">Next step</label>
+        <input id="f-nextstep" maxlength="200" placeholder="What happens next">
+      </div>
+      <div class="field">
+        <label for="f-blocker">Blocker (optional)</label>
+        <input id="f-blocker" maxlength="200" placeholder="What's stopping progress, if anything">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="f-liveurl">Live URL</label>
+          <input id="f-liveurl" type="url" maxlength="300" placeholder="https://…">
+        </div>
+        <div class="field">
+          <label for="f-repourl">Repo URL</label>
+          <input id="f-repourl" type="url" maxlength="300" placeholder="https://github.com/…">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API_URL = '/api/projects';
+  const CATEGORY_ORDER = ['Product', 'Client Work', 'AI / Security Tools', 'Finance Tools', 'Learning Series', 'Personal'];
+  const CATEGORY_SLUG = {
+    'Product': 'product',
+    'Client Work': 'client',
+    'AI / Security Tools': 'aitools',
+    'Finance Tools': 'finance',
+    'Learning Series': 'learning',
+    'Personal': 'personal',
+  };
+  const STATUS_ORDER = { blocked: 0, live: 1, shipped: 2, paused: 3, idea: 4 };
+  const STATUS_LABEL = { live: 'Live', shipped: 'Shipped', blocked: 'Blocked', paused: 'Paused', idea: 'Idea' };
+
+  const EXT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>';
+
+  let projects = new Map();
+  let loaded = false;
+  let activeFilter = 'all';
+  let editingId = null;
+  let detailId = null;
+  let apiKey = '';
+  try { apiKey = localStorage.getItem('cd_key') || ''; } catch (e) {}
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function truncate(s, n) { return (s || '').length > n ? s.slice(0, n - 1) + '…' : (s || ''); }
+
+  function setSync(state) {
+    const badge = document.getElementById('syncBadge');
+    const label = document.getElementById('syncLabel');
+    badge.className = 'sync' + (state === 'ok' ? ' ok' : state === 'warn' ? ' warn' : '');
+    label.textContent = state === 'ok' ? 'Synced' : state === 'warn' ? 'Connection issue' : 'Connecting…';
+  }
+
+  function getKey(promptIfMissing) {
+    if (!apiKey && promptIfMissing) {
+      const k = window.prompt('Enter the edit key for this board:');
+      if (k) {
+        apiKey = k.trim();
+        try { localStorage.setItem('cd_key', apiKey); } catch (e) {}
+      }
+    }
+    return apiKey;
+  }
+  function forgetKey() {
+    apiKey = '';
+    try { localStorage.removeItem('cd_key'); } catch (e) {}
+  }
+
+  async function apiList() {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error('list_failed');
+    return res.json();
+  }
+  async function apiCreate(data) {
+    const key = getKey(true);
+    const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Api-Key': key || '' }, body: JSON.stringify(data) });
+    if (res.status === 401) { forgetKey(); throw new Error('unauthorized'); }
+    if (!res.ok) throw new Error('create_failed');
+    return res.json();
+  }
+  async function apiUpdate(id, data) {
+    const key = getKey(true);
+    const res = await fetch(API_URL + '?id=' + encodeURIComponent(id), { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Api-Key': key || '' }, body: JSON.stringify(data) });
+    if (res.status === 401) { forgetKey(); throw new Error('unauthorized'); }
+    if (!res.ok) throw new Error('update_failed');
+    return res.json();
+  }
+  async function apiDelete(id) {
+    const key = getKey(true);
+    const res = await fetch(API_URL + '?id=' + encodeURIComponent(id), { method: 'DELETE', headers: { 'X-Api-Key': key || '' } });
+    if (res.status === 401) { forgetKey(); throw new Error('unauthorized'); }
+    if (!res.ok) throw new Error('delete_failed');
+    return true;
+  }
+
+  async function loadProjects() {
+    try {
+      const items = await apiList();
+      const next = new Map();
+      items.forEach(p => { const { id, ...rest } = p; next.set(id, rest); });
+      projects = next;
+      setSync('ok');
+    } catch (e) {
+      setSync('warn');
+    } finally {
+      loaded = true;
+      render();
+    }
+  }
+
+  function computeStats(list) {
+    const s = { live: 0, shipped: 0, blocked: 0, paused: 0 };
+    list.forEach(p => { if (s[p.status] !== undefined) s[p.status]++; });
+    return s;
+  }
+
+  function orderedCategories(byCategory) {
+    return Array.from(byCategory.keys()).sort((a, b) => {
+      const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }
+
+  function renderTrackMap(list) {
+    const byCategory = new Map();
+    list.forEach(p => {
+      const cat = p.category || 'Other';
+      if (!byCategory.has(cat)) byCategory.set(cat, []);
+      byCategory.get(cat).push(p);
+    });
+    const categories = orderedCategories(byCategory);
+
+    const width = 1120;
+    const leftPad = 190, rightPad = 40, rowH = 100, padTop = 30, padBottom = 20;
+    const trackWidth = width - leftPad - rightPad;
+    const height = categories.length * rowH + padTop + padBottom;
+
+    let svg = '<svg class="trackmap" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="Projects grouped into tracks by category, positioned as stations along each track">';
+
+    categories.forEach((cat, ci) => {
+      const items = byCategory.get(cat).slice().sort((a, b) => {
+        const sa = STATUS_ORDER[a.status] ?? 5, sb = STATUS_ORDER[b.status] ?? 5;
+        if (sa !== sb) return sa - sb;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+      const slug = CATEGORY_SLUG[cat] || 'other';
+      const y = padTop + ci * rowH + rowH / 2;
+      const hasLive = items.some(p => p.status === 'live');
+
+      svg += '<line x1="' + leftPad + '" y1="' + y + '" x2="' + (width - rightPad) + '" y2="' + y + '" stroke="var(--border-strong)" stroke-width="3" stroke-linecap="round"/>';
+      if (hasLive) {
+        svg += '<line class="flow-' + slug + ' flow" x1="' + leftPad + '" y1="' + y + '" x2="' + (width - rightPad) + '" y2="' + y + '" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 15" fill="none"/>';
+      }
+      svg += '<text x="' + (leftPad - 16) + '" y="' + (y - 6) + '" text-anchor="end" class="track-label cat-' + slug + '">' + escapeHtml(cat) + '</text>';
+      svg += '<text x="' + (leftPad - 16) + '" y="' + (y + 12) + '" text-anchor="end" class="track-count">' + items.length + ' project' + (items.length === 1 ? '' : 's') + '</text>';
+
+      const n = items.length;
+      items.forEach((p, i) => {
+        const usable = trackWidth - 30;
+        const x = n === 1 ? leftPad + 20 : leftPad + 20 + (i * usable) / (n - 1);
+        const dimClass = (activeFilter !== 'all' && p.status !== activeFilter) ? ' dim' : '';
+        svg += '<g class="node-group' + dimClass + '" data-id="' + p.id + '" tabindex="0" role="button">';
+        svg += '<title>' + escapeHtml(p.name) + ' — ' + STATUS_LABEL[p.status] + '</title>';
+        if (p.status === 'live') {
+          svg += '<circle cx="' + x + '" cy="' + y + '" r="9" class="ring-live" fill="none" stroke-width="2"/>';
+        } else if (p.status === 'blocked') {
+          svg += '<circle cx="' + x + '" cy="' + y + '" r="12" class="ring-blocked" fill="none" stroke-width="1.6"/>';
+        }
+        svg += '<circle cx="' + x + '" cy="' + y + '" r="8" class="node node-' + p.status + '"/>';
+        svg += '<text x="' + x + '" y="' + (y + 25) + '" text-anchor="middle" class="node-label">' + escapeHtml(truncate(p.name, 13)) + '</text>';
+        svg += '</g>';
+      });
+    });
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function render() {
+    const list = Array.from(projects.entries()).map(([id, data]) => ({ id, ...data }));
+    const stats = computeStats(list);
+    document.getElementById('statLive').textContent = stats.live;
+    document.getElementById('statShipped').textContent = stats.shipped;
+    document.getElementById('statBlocked').textContent = stats.blocked;
+    document.getElementById('statPaused').textContent = stats.paused;
+
+    const board = document.getElementById('board');
+
+    if (!loaded) {
+      board.innerHTML = '<div class="trackmap-wrap"><div class="skeleton-wrap">' +
+        '<div class="skeleton-track"></div>'.repeat(5) +
+        '</div></div>';
+      return;
+    }
+    if (list.length === 0) {
+      board.innerHTML = '<div class="empty-state">No projects yet. Click <strong>+ Add project</strong> to add the first one.</div>';
+      return;
+    }
+
+    board.innerHTML = '<div class="trackmap-wrap">' + renderTrackMap(list) + '</div>';
+
+    board.querySelectorAll('.node-group').forEach(g => {
+      const id = g.getAttribute('data-id');
+      g.addEventListener('click', () => openDetail(id));
+      g.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(id); }
+      });
+    });
+  }
+
+  function detailBodyHtml(p) {
+    const status = STATUS_LABEL[p.status] ? p.status : 'idea';
+    let links = '';
+    if (p.liveUrl) links += '<a href="' + escapeHtml(p.liveUrl) + '" target="_blank" rel="noopener">' + EXT_ICON + ' Live</a>';
+    if (p.repoUrl) links += '<a href="' + escapeHtml(p.repoUrl) + '" target="_blank" rel="noopener">' + EXT_ICON + ' Repo</a>';
+    return '<p class="detail-cat">' + escapeHtml(p.category || 'Other') + '</p>' +
+      '<span class="status-pill status-' + status + '">' + STATUS_LABEL[status] + '</span>' +
+      '<h3 class="detail-name">' + escapeHtml(p.name) + '</h3>' +
+      (p.description ? '<p class="desc">' + escapeHtml(p.description) + '</p>' : '') +
+      (p.nextStep ? '<div class="meta-line next"><span class="tag">Next</span><span>' + escapeHtml(p.nextStep) + '</span></div>' : '') +
+      (p.blocker ? '<div class="meta-line blocker"><span class="tag">Blocked on</span><span>' + escapeHtml(p.blocker) + '</span></div>' : '') +
+      '<div class="card-foot">' +
+        '<span>' + (p.updatedAt ? 'Updated ' + fmtDate(p.updatedAt) : '') + '</span>' +
+        (links ? '<div class="links">' + links + '</div>' : '') +
+      '</div>';
+  }
+
+  function openDetail(id) {
+    const p = projects.get(id);
+    if (!p) return;
+    detailId = id;
+    document.getElementById('detailBody').innerHTML = detailBodyHtml(p);
+    document.getElementById('detailOverlay').hidden = false;
+  }
+  function closeDetail() {
+    document.getElementById('detailOverlay').hidden = true;
+    detailId = null;
+  }
+
+  function openModal(id) {
+    editingId = id || null;
+    document.getElementById('formError').hidden = true;
+    document.getElementById('modalTitle').textContent = editingId ? 'Edit project' : 'Add project';
+    const p = editingId ? projects.get(editingId) : null;
+    document.getElementById('f-name').value = p ? p.name || '' : '';
+    document.getElementById('f-category').value = p ? p.category || '' : '';
+    document.getElementById('f-status').value = p ? p.status || 'idea' : 'idea';
+    document.getElementById('f-description').value = p ? p.description || '' : '';
+    document.getElementById('f-nextstep').value = p ? p.nextStep || '' : '';
+    document.getElementById('f-blocker').value = p ? p.blocker || '' : '';
+    document.getElementById('f-liveurl').value = p ? p.liveUrl || '' : '';
+    document.getElementById('f-repourl').value = p ? p.repoUrl || '' : '';
+    document.getElementById('overlay').hidden = false;
+    document.getElementById('f-name').focus();
+  }
+  function closeModal() {
+    document.getElementById('overlay').hidden = true;
+    editingId = null;
+  }
+
+  async function deleteProject(id) {
+    const p = projects.get(id);
+    if (!p) return false;
+    if (!window.confirm('Delete "' + p.name + '"? This can\'t be undone.')) return false;
+    try {
+      await apiDelete(id);
+      await loadProjects();
+      return true;
+    } catch (e) {
+      alert(e.message === 'unauthorized' ? 'Wrong key.' : 'Could not delete — try again.');
+      return false;
+    }
+  }
+
+  async function submitForm(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('formError');
+    errEl.hidden = true;
+    const data = {
+      name: document.getElementById('f-name').value.trim(),
+      category: document.getElementById('f-category').value.trim() || 'Other',
+      status: document.getElementById('f-status').value,
+      description: document.getElementById('f-description').value.trim(),
+      nextStep: document.getElementById('f-nextstep').value.trim(),
+      blocker: document.getElementById('f-blocker').value.trim(),
+      liveUrl: document.getElementById('f-liveurl').value.trim(),
+      repoUrl: document.getElementById('f-repourl').value.trim(),
+      updatedAt: new Date().toISOString().slice(0, 10),
+    };
+    if (!data.name) { errEl.textContent = 'Name is required.'; errEl.hidden = false; return; }
+
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
+    try {
+      if (editingId) {
+        await apiUpdate(editingId, data);
+      } else {
+        await apiCreate(data);
+      }
+      await loadProjects();
+      closeModal();
+    } catch (err) {
+      errEl.textContent = err.message === 'unauthorized' ? 'Wrong key — try Edit again to re-enter it.' : 'Could not save — try again.';
+      errEl.hidden = false;
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => openModal(null));
+  document.getElementById('closeModal').addEventListener('click', closeModal);
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
+  document.getElementById('projectForm').addEventListener('submit', submitForm);
+
+  document.getElementById('closeDetail').addEventListener('click', closeDetail);
+  document.getElementById('detailOverlay').addEventListener('click', (e) => { if (e.target.id === 'detailOverlay') closeDetail(); });
+  document.getElementById('detailEdit').addEventListener('click', () => { const id = detailId; closeDetail(); openModal(id); });
+  document.getElementById('detailDelete').addEventListener('click', async () => {
+    const id = detailId;
+    const ok = await deleteProject(id);
+    if (ok) closeDetail();
+  });
+
+  document.getElementById('filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('.pill');
+    if (!btn) return;
+    activeFilter = btn.getAttribute('data-filter');
+    document.querySelectorAll('#filters .pill').forEach(p => p.classList.toggle('active', p === btn));
+    render();
+  });
+
+  render();
+  loadProjects();
+  setInterval(() => { if (document.visibilityState === 'visible') loadProjects(); }, 25000);
+</script>
+</body>
+</html>
